@@ -4,6 +4,10 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 
+/**
+ * Static blueprint for a game room. Parses a raw integer matrix layout
+ * and translates it into LibGDX world coordinates.
+ */
 public class RoomTemplate {
     public static final int WIDTH = 16;
     public static final int HEIGHT = 11;
@@ -13,6 +17,12 @@ public class RoomTemplate {
     private final Array<Vector2> enemySpawnPoints;
     private final Vector2 slotMachineSpawnPoint;
 
+    /**
+     * Constructs a new RoomTemplate and processes the layout matrix.
+     * Maps top-left array indices to LibGDX bottom-left world space.
+     *
+     * @param matrix 2D array defining the room structure
+     */
     public RoomTemplate(int[][] matrix) {
         this.tileMap = matrix;
         this.enemySpawnPoints = new Array<>();
@@ -20,6 +30,10 @@ public class RoomTemplate {
         parseMatrix();
     }
 
+    /**
+     * Scans the layout matrix to locate enemy and slot machine markers.
+     * Automatically inverts the Y-axis for OpenGL coordinate system.
+     */
     private void parseMatrix() {
         for (int y = 0; y < HEIGHT; y++) {
             for (int x = 0; x < WIDTH; x++) {
@@ -41,6 +55,12 @@ public class RoomTemplate {
     public Array<Vector2> getEnemySpawnPoints() { return enemySpawnPoints; }
     public Vector2 getSlotMachineSpawnPoint() { return slotMachineSpawnPoint; }
 
+    /**
+     * Generates bounding boxes for solid objects like walls and obstacles.
+     * Used by Developer 1 for physics and collision detection.
+     *
+     * @return array of rectangles representing solid walls
+     */
     public Array<Rectangle> getWallColliders() {
         Array<Rectangle> colliders = new Array<>();
         for (int y = 0; y < HEIGHT; y++) {

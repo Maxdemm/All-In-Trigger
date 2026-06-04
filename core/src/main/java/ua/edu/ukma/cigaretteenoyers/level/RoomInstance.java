@@ -6,6 +6,10 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 
+/**
+ * Handles the state, rendering, and logic of an active game room.
+ * Manages enemy progression, door blockages, and loot spawning.
+ */
 public class RoomInstance {
 
     public enum RoomState {
@@ -22,6 +26,11 @@ public class RoomInstance {
     private final Rectangle leftDoorCollider;
     private final Rectangle rightDoorCollider;
 
+    /**
+     * Initializes the room state and sets up collision dimensions for the side doors.
+     *
+     * @param template the structural blueprint of the room
+     */
     public RoomInstance(RoomTemplate template) {
         this.template = template;
         this.currentState = RoomState.NOT_VISITED;
@@ -34,6 +43,9 @@ public class RoomInstance {
         this.rightDoorCollider = new Rectangle((RoomTemplate.WIDTH - 1) * RoomTemplate.TILE_SIZE, midY, RoomTemplate.TILE_SIZE, RoomTemplate.TILE_SIZE);
     }
 
+    /**
+     * Triggers when the player enters the room. Locks doors if enemies are present.
+     */
     public void enterRoom() {
         if (currentState == RoomState.NOT_VISITED) {
             currentState = RoomState.ACTIVE;
@@ -44,6 +56,12 @@ public class RoomInstance {
         }
     }
 
+    /**
+     * Updates the alive enemy count and check if the room should be cleared.
+     * Called on every frame of the gameplay loop.
+     *
+     * @param currentAliveEnemiesCount the current number of living enemies in the room
+     */
     public void update(int currentAliveEnemiesCount) {
         if (currentState == RoomState.ACTIVE) {
             this.remainingEnemies = currentAliveEnemiesCount;
@@ -53,6 +71,9 @@ public class RoomInstance {
         }
     }
 
+    /**
+     * Shifts the room state to cleared and initiates loot spawn mechanisms.
+     */
     private void clearRoom() {
         currentState = RoomState.CLEARED;
         System.out.println("Room is clear. the doors are open");
@@ -61,12 +82,21 @@ public class RoomInstance {
         }
     }
 
+    /**
+     * Extracts coordinates from the template to prepare the dynamic spawn of the slot machine.
+     */
     private void triggerSlotMachineSpawn() {
         slotMachineSpawned = true;
         Vector2 spawnPos = template.getSlotMachineSpawnPoint();
         System.out.println("Slot machine xy: " + spawnPos);
     }
 
+    /**
+     * Renders the tile grid and the door hitboxes using basic geometric shapes.
+     * Serves as a prototype view before texture integration.
+     *
+     * @param shapeRenderer the LibGDX primitive shape drawing tool
+     */
     public void render(ShapeRenderer shapeRenderer) {
         int[][] tileMap = template.getTileMap();
 
@@ -100,6 +130,12 @@ public class RoomInstance {
         shapeRenderer.end();
     }
 
+    /**
+     * Combines permanent wall colliders from the template with conditional door colliders.
+     * Main integration endpoint for the physics collision handler.
+     *
+     * @return array of bounding boxes blocking player movement
+     */
     public Array<Rectangle> getWallColliders() {
         Array<Rectangle> colliders = template.getWallColliders();
         if (currentState == RoomState.ACTIVE) {
