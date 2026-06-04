@@ -7,7 +7,7 @@ import com.badlogic.gdx.utils.Array;
 public class RoomTemplate {
     public static final int WIDTH = 16;
     public static final int HEIGHT = 11;
-    public static final float TILE_SIZE = 32f; // Розмір одного тайла в пікселях
+    public static final float TILE_SIZE = 32f;
 
     private final int[][] tileMap;
     private final Array<Vector2> enemySpawnPoints;
