@@ -27,6 +27,9 @@ public class WallView {
 
         shapeRenderer.end();
     }
+    public com.badlogic.gdx.math.Rectangle getBounds() {
+        return new com.badlogic.gdx.math.Rectangle(position.x, position.y, width, height);
+    }
 
     public Vector2 getPosition() { return position; }
     public float getWidth() { return width; }

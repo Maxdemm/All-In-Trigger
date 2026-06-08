@@ -15,11 +15,11 @@ public class MoneyCounter {
         shapeRenderer = new ShapeRenderer();
     }
 
-    public void render(SpriteBatch batch) {
+    // Тепер приймає поточну кількість монет
+    public void render(SpriteBatch batch, int currentMoney) {
         shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        // Background
         shapeRenderer.setColor(0, 0, 0, 0.5f);
         shapeRenderer.rect(550, 440, 130, 30);
 
@@ -27,7 +27,7 @@ public class MoneyCounter {
 
         batch.begin();
         font.setColor(Color.YELLOW);
-        font.draw(batch, "$ 250", 560, 460);
+        font.draw(batch, "$ " + currentMoney, 560, 460);
         batch.end();
     }
 
@@ -36,4 +36,3 @@ public class MoneyCounter {
         shapeRenderer.dispose();
     }
 }
-
