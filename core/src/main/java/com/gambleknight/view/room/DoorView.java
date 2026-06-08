@@ -48,7 +48,9 @@ public class DoorView {
     public void setOpen(boolean open) {
         isOpen = open;
     }
-
+    public com.badlogic.gdx.math.Rectangle getBounds() {
+        return new com.badlogic.gdx.math.Rectangle(position.x, position.y, width, height);
+    }
     public boolean isOpen() { return isOpen; }
     public Vector2 getPosition() { return position; }
     public float getWidth() { return width; }
