@@ -22,22 +22,19 @@ public class UpgradeUI {
         shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        // Ідеально відцентровано по X (1280-400)/2 = 440 та піднято вгору до Y = 380
         float x = 440;
         float y = 380;
         float width = 400;
         float height = 230;
 
-        // Background
         shapeRenderer.setColor(0.12f, 0.12f, 0.18f, 0.95f);
         shapeRenderer.rect(x, y, width, height);
 
-        // Border
         shapeRenderer.setColor(Color.GOLD);
-        shapeRenderer.rect(x, y, width, 2); // Нижня межа
-        shapeRenderer.rect(x, y + height - 2, width, 2); // Верхня межа
-        shapeRenderer.rect(x, y, 2, height); // Ліва межа
-        shapeRenderer.rect(x + width - 2, y, 2, height); // Права межа
+        shapeRenderer.rect(x, y, width, 2);
+        shapeRenderer.rect(x, y + height - 2, width, 2);
+        shapeRenderer.rect(x, y, 2, height);
+        shapeRenderer.rect(x + width - 2, y, 2, height);
 
         shapeRenderer.end();
 

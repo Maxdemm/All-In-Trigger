@@ -20,7 +20,7 @@ public class WeaponPanel {
     public void render(SpriteBatch batch) {
         shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
 
-        float x = 1100; // Зміщено під нову роздільну здатність
+        float x = 1100;
         float y = 30;
 
         Gdx.gl.glEnable(GL20.GL_BLEND);

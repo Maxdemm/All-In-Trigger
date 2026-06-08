@@ -30,7 +30,6 @@ public class MinimapUI {
         Gdx.gl.glEnable(GL20.GL_BLEND);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        // --- 1. НАЛАШТУВАННЯ СТАТИЧНОЇ РАМКИ МІНІМАПИ ---
         float mapX = 1080;
         float mapY = 470;
         float mapW = 170;
@@ -45,7 +44,6 @@ public class MinimapUI {
         shapeRenderer.rect(mapX, mapY, 2, mapH);
         shapeRenderer.rect(mapX + mapW - 2, mapY, 2, mapH);
 
-        // --- 2. МАТЕМАТИКА МАСШТАБУВАННЯ ---
         float minX = -550;
         float minY = -650;
         float worldW = 2850;
@@ -55,7 +53,6 @@ public class MinimapUI {
         float offsetX = mapX + (mapW - worldW * scale) / 2f;
         float offsetY = mapY + (mapH - worldH * scale) / 2f;
 
-        // --- 3. МАЛЮЄМО КОРИДОРИ ТА ТУНЕЛІ ---
         shapeRenderer.setColor(colorCorridor);
         drawScaledRect(450, 220, 200, 100, minX, minY, scale, offsetX, offsetY);
         drawScaledRect(1100, 220, 200, 100, minX, minY, scale, offsetX, offsetY);
@@ -68,7 +65,6 @@ public class MinimapUI {
         drawScaledRect(825, 500, 100, 300, minX, minY, scale, offsetX, offsetY);
         drawScaledRect(1450, -300, 100, 400, minX, minY, scale, offsetX, offsetY);
 
-        // --- 4. МАЛЮЄМО КІМНАТИ ---
         shapeRenderer.setColor(colorRoom);
         drawScaledRect(100, 100, 350, 350, minX, minY, scale, offsetX, offsetY);
         drawScaledRect(650, 50, 450, 450, minX, minY, scale, offsetX, offsetY);
@@ -89,7 +85,6 @@ public class MinimapUI {
         shapeRenderer.setColor(colorForge);
         drawScaledRect(1900, -650, 400, 350, minX, minY, scale, offsetX, offsetY);
 
-        // --- 5. МАЛЮЄМО МОНЕТИ НА КАРТІ ---
         shapeRenderer.setColor(Color.YELLOW);
         for (Coin coin : coins) {
             if (!coin.isCollected) {
@@ -101,7 +96,6 @@ public class MinimapUI {
             }
         }
 
-        // --- 6. МАЛЮЄМО ВОРОГІВ НА КАРТІ ---
         shapeRenderer.setColor(Color.RED);
         for (Enemy enemy : enemies) {
             float ex = offsetX + (enemy.x - minX) * scale;
@@ -111,7 +105,6 @@ public class MinimapUI {
             }
         }
 
-        // --- 7. ЖИВА МАРКЕР-КРАПКА ГРАВЦЯ ---
         float playerMinimapX = offsetX + (playerX - minX) * scale;
         float playerMinimapY = offsetY + (playerY - minY) * scale;
 

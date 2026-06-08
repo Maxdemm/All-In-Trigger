@@ -15,7 +15,6 @@ public class MoneyCounter {
         shapeRenderer = new ShapeRenderer();
     }
 
-    // Тепер приймає поточну кількість монет
     public void render(SpriteBatch batch, int currentMoney) {
         shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);

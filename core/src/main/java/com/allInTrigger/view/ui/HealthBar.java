@@ -14,7 +14,6 @@ public class HealthBar {
         font = new BitmapFont();
     }
 
-    // Тепер приймає динамічне HP
     public void render(SpriteBatch batch, float currentHp, float maxHp) {
         shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
@@ -22,22 +21,18 @@ public class HealthBar {
         float startX = 20;
         float startY = 420;
 
-        // Розрахунок відсотка здоров'я
         float hpPercent = Math.max(0, currentHp / maxHp);
 
-        // Смужка ХП
         shapeRenderer.setColor(Color.BLACK);
         shapeRenderer.rect(startX, startY, 150, 14);
         shapeRenderer.setColor(Color.RED);
         shapeRenderer.rect(startX + 2, startY + 2, 146 * hpPercent, 10);
 
-        // Смужка БРОНІ (поки статична)
         shapeRenderer.setColor(Color.BLACK);
         shapeRenderer.rect(startX, startY - 18, 150, 14);
         shapeRenderer.setColor(Color.CYAN);
         shapeRenderer.rect(startX + 2, startY - 16, 146 * 0.5f, 10);
 
-        // Смужка ЕНЕРГІЇ (поки статична)
         shapeRenderer.setColor(Color.BLACK);
         shapeRenderer.rect(startX, startY - 36, 150, 14);
         shapeRenderer.setColor(Color.GREEN);

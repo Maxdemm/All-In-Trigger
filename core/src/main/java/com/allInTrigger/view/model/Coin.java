@@ -23,7 +23,7 @@ public class Coin {
         // Тінь монети
         shapeRenderer.setColor(0, 0, 0, 0.3f);
         shapeRenderer.ellipse(x - 4, y - 6, 10, 4);
-        // Сама монета
+        // Сама золота монета
         shapeRenderer.setColor(Color.YELLOW);
         shapeRenderer.circle(x, y, RADIUS);
         shapeRenderer.setColor(0.9f, 0.7f, 0f, 1f); // Внутрішнє кільце декор

@@ -26,14 +26,12 @@ public class HUD {
         }
     }
 
-    // ОНОВЛЕНО: Тепер метод приймає також броню (ARM) та стаміну (ENG)
     public void render(SpriteBatch batch, float currentHp, float maxHp, float currentArm, float maxArm, float currentEng, float maxEng, int currentMoney) {
         shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
 
         Gdx.gl.glEnable(GL20.GL_BLEND);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        // Верхня плашка
         shapeRenderer.setColor(0.07f, 0.07f, 0.09f, 0.95f);
         shapeRenderer.rect(0, 640, 1280, 80);
         shapeRenderer.setColor(0.18f, 0.18f, 0.22f, 1f);
@@ -43,16 +41,12 @@ public class HUD {
         float barWidth = 200;
         float barHeight = 14;
 
-        // Розрахунок відсотків заповнення смужок
         float hpProgress = Math.max(0f, currentHp / maxHp);
         float armProgress = Math.max(0f, currentArm / maxArm);
         float engProgress = Math.max(0f, currentEng / maxEng);
 
-        // HP (Червона) — Динамічна
         drawSleekBar(barX, 690, barWidth, barHeight, Color.RED, hpProgress);
-        // ARM (Блакитна) — Динамічна
         drawSleekBar(barX, 668, barWidth, barHeight, Color.CYAN, armProgress);
-        // ENG (Зелена) — Динамічна
         drawSleekBar(barX, 646, barWidth, barHeight, Color.GREEN, engProgress);
 
         shapeRenderer.end();
@@ -64,11 +58,9 @@ public class HUD {
         font.draw(batch, "ARM", 30, 681);
         font.draw(batch, "ENG", 30, 659);
 
-        // Рівень
         font.setColor(Color.WHITE);
         font.draw(batch, levelText, 590, 688);
 
-        // Золото — Динамічне
         font.setColor(Color.GOLD);
         font.draw(batch, "$ " + currentMoney, 1160, 688);
         batch.end();
