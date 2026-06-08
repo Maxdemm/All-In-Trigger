@@ -14,35 +14,37 @@ public class HealthBar {
         font = new BitmapFont();
     }
 
-    public void render(SpriteBatch batch) {
+    // Тепер приймає динамічне HP
+    public void render(SpriteBatch batch, float currentHp, float maxHp) {
         shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        // Позиція HUD у верхньому лівому кутку (x=20, y=420)
         float startX = 20;
         float startY = 420;
 
-        // 1. Смужка ХП (Червона)
+        // Розрахунок відсотка здоров'я
+        float hpPercent = Math.max(0, currentHp / maxHp);
+
+        // Смужка ХП
         shapeRenderer.setColor(Color.BLACK);
         shapeRenderer.rect(startX, startY, 150, 14);
         shapeRenderer.setColor(Color.RED);
-        shapeRenderer.rect(startX + 2, startY + 2, 146 * 0.8f, 10); // 80% HP
+        shapeRenderer.rect(startX + 2, startY + 2, 146 * hpPercent, 10);
 
-        // 2. Смужка БРОНІ (Синя/Слабо-блакитна, як у Soul Knight)
+        // Смужка БРОНІ (поки статична)
         shapeRenderer.setColor(Color.BLACK);
         shapeRenderer.rect(startX, startY - 18, 150, 14);
         shapeRenderer.setColor(Color.CYAN);
-        shapeRenderer.rect(startX + 2, startY - 16, 146 * 0.5f, 10); // 50% Armor
+        shapeRenderer.rect(startX + 2, startY - 16, 146 * 0.5f, 10);
 
-        // 3. Смужка ЕНЕРГІЇ (Зелена)
+        // Смужка ЕНЕРГІЇ (поки статична)
         shapeRenderer.setColor(Color.BLACK);
         shapeRenderer.rect(startX, startY - 36, 150, 14);
         shapeRenderer.setColor(Color.GREEN);
-        shapeRenderer.rect(startX + 2, startY - 34, 146 * 1.0f, 10); // 100% Energy
+        shapeRenderer.rect(startX + 2, startY - 34, 146 * 1.0f, 10);
 
         shapeRenderer.end();
 
-        // Текстові показники поверх смужок
         batch.begin();
         font.setColor(Color.WHITE);
         font.draw(batch, "HP", startX + 5, startY + 12);

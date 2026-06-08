@@ -12,6 +12,7 @@ public class SlotMachineUI {
 
     public SlotMachineUI() {
         font = new BitmapFont();
+        font.getData().setScale(1.3f);
         shapeRenderer = new ShapeRenderer();
     }
 
@@ -21,21 +22,40 @@ public class SlotMachineUI {
         shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        // Slot machine background
-        shapeRenderer.setColor(0.3f, 0.2f, 0.1f, 0.9f);
-        shapeRenderer.rect(250, 200, 300, 150);
+        // Відцентровано по X (1280-340)/2 = 470 та піднято вгору до Y = 420
+        float x = 470;
+        float y = 420;
+        float width = 340;
+        float height = 180;
 
-        // Slot windows
+        // Slot machine background
+        shapeRenderer.setColor(0.25f, 0.15f, 0.1f, 0.95f);
+        shapeRenderer.rect(x, y, width, height);
+
+        // Рамка екрану рулетки
+        shapeRenderer.setColor(Color.GOLD);
+        shapeRenderer.rect(x, y, width, 3);
+        shapeRenderer.rect(x, y + height - 3, width, 3);
+        shapeRenderer.rect(x, y, 3, height);
+        shapeRenderer.rect(x + width - 3, y, 3, height);
+
+        // Slot windows (чорні віконця для цифр/символів)
         shapeRenderer.setColor(0, 0, 0, 1f);
-        shapeRenderer.rect(270, 270, 50, 50);
-        shapeRenderer.rect(350, 270, 50, 50);
-        shapeRenderer.rect(430, 270, 50, 50);
+        shapeRenderer.rect(x + 30, y + 80, 60, 60);
+        shapeRenderer.rect(x + 140, y + 80, 60, 60);
+        shapeRenderer.rect(x + 250, y + 80, 60, 60);
 
         shapeRenderer.end();
 
         batch.begin();
         font.setColor(Color.YELLOW);
-        font.draw(batch, "SPIN!", 350, 230);
+        font.draw(batch, "PRESS [ENTER] TO SPIN!", x + 45, y + 45);
+
+        // Тимчасові символи у віконцях для вигляду
+        font.setColor(Color.WHITE);
+        font.draw(batch, "7", x + 53, y + 118);
+        font.draw(batch, "7", x + 163, y + 118);
+        font.draw(batch, "7", x + 273, y + 118);
         batch.end();
     }
 
@@ -43,9 +63,12 @@ public class SlotMachineUI {
         isVisible = visible;
     }
 
+    public boolean isVisible() {
+        return isVisible;
+    }
+
     public void dispose() {
         font.dispose();
         shapeRenderer.dispose();
     }
 }
-
