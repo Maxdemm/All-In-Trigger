@@ -1,26 +1,21 @@
 package com.allInTrigger;
 
-import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.utils.ScreenUtils;
-import com.allInTrigger.view.GameRenderer;
+import com.badlogic.gdx.Game;
+import com.allInTrigger.view.lobby.MainMenuScreen;
 
-/** {@link ApplicationAdapter} implementation shared by all platforms. */
-public class AllInTrigger extends ApplicationAdapter {
-    private GameRenderer gameRenderer;
-
+public class AllInTrigger extends Game {
     @Override
     public void create() {
-        gameRenderer = new GameRenderer();
+        setScreen(new MainMenuScreen(this));
     }
 
     @Override
     public void render() {
-        ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f);
-        gameRenderer.render();
+        super.render();
     }
 
     @Override
     public void dispose() {
-        gameRenderer.dispose();
+        super.dispose();
     }
 }
