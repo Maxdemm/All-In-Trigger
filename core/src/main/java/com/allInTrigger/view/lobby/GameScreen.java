@@ -5,6 +5,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.allInTrigger.AllInTrigger;
 import com.allInTrigger.view.GameRenderer;
+import com.allInTrigger.view.ui.SoundManager; // ← ЗВУК
 
 public class GameScreen implements Screen {
     private final AllInTrigger game;
@@ -17,26 +18,24 @@ public class GameScreen implements Screen {
     @Override
     public void show() {
         gameRenderer = new GameRenderer();
+        // ── Перемикаємо на музику рівня ────────────────────────────────────
+        SoundManager.getInstance().playLevelMusic();
     }
 
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
         gameRenderer.render();
     }
 
-    @Override
-    public void resize(int width, int height) {}
-    @Override public void pause() {}
-    @Override public void resume() {}
-    @Override public void hide() {}
+    @Override public void resize(int width, int height) {}
+    @Override public void pause()  { SoundManager.getInstance().pauseMusic(); }
+    @Override public void resume() { SoundManager.getInstance().resumeMusic(); }
+    @Override public void hide()   {}
 
     @Override
     public void dispose() {
-        if (gameRenderer != null) {
-            gameRenderer.dispose();
-        }
+        if (gameRenderer != null) gameRenderer.dispose();
     }
 }
