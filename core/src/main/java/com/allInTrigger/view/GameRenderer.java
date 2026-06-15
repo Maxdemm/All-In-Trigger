@@ -11,11 +11,11 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.allInTrigger.view.player.PlayerView;
+import com.allInTrigger.view.enemy.EnemyView;
 import com.allInTrigger.view.room.DoorView;
 import com.allInTrigger.view.room.RoomView;
 import com.allInTrigger.view.room.WallView;
 
-// Імпорти твоїх ефектів
 import com.allInTrigger.view.effects.CoinEffectView;
 import com.allInTrigger.view.effects.DamageTextView;
 import com.allInTrigger.view.effects.ExplosionEffect;
@@ -27,6 +27,8 @@ import com.allInTrigger.view.ui.SlotMachineUI;
 import com.allInTrigger.view.ui.UpgradeUI;
 import com.allInTrigger.view.ui.WeaponPanel;
 import com.allInTrigger.view.model.*;
+
+import com.allInTrigger.GameSettings;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +43,7 @@ public class GameRenderer {
 
     private RoomView roomView;
     private PlayerView playerView;
+    private EnemyView enemyView; // Додано гарний вигляд ворогів
     private HUD hud;
     private MinimapUI minimapUI;
     private WeaponPanel weaponPanel;
@@ -75,10 +78,10 @@ public class GameRenderer {
     private final float PLAYER_SPEED = 300f;
 
     // Gamble Knight: Гроші = Здоров'я
-    private int playerMoney = 100; // Це тепер здоров'я!
+    private int playerMoney = 100;
     private int initialMoney = 100;
     private final int MAX_MONEY = 1000;
-    private float moneyShakeAmount = 0f; // Для шейку екрана при втраті/отриманню грошей
+    private float moneyShakeAmount = 0f;
     private float moneyShakeTimer = 0f;
 
     // Система рівнів
@@ -92,6 +95,8 @@ public class GameRenderer {
     private float attackVisualTimer = 0f;
     private float camTime = 0;
 
+    private GameSettings gameSettings;
+
     public GameRenderer() {
         batch = new SpriteBatch();
         globalShapeRenderer = new ShapeRenderer();
@@ -104,6 +109,7 @@ public class GameRenderer {
 
         roomView = new RoomView();
         playerView = new PlayerView();
+        enemyView = new EnemyView(); // Ініціалізація красивого вигляду ворогів
 
         hud = new HUD();
         minimapUI = new MinimapUI();
@@ -115,19 +121,18 @@ public class GameRenderer {
         healthPacks = new ArrayList<>();
         lootDrops = new ArrayList<>();
 
-        // Ініціалізація списків ефектів
         coinEffects = new ArrayList<>();
         damageTexts = new ArrayList<>();
         explosions = new ArrayList<>();
         healTexts = new ArrayList<>();
 
-        // Room system
         rooms = new ArrayList<>();
         bullets = new ArrayList<>();
         availableWeapons = new ArrayList<>();
         random = new Random();
 
-        // Initialize weapons
+        gameSettings = new GameSettings();
+
         availableWeapons.add(Weapon.createPistol());
         availableWeapons.add(Weapon.createShotgun());
         availableWeapons.add(Weapon.createRifle());
@@ -138,6 +143,7 @@ public class GameRenderer {
     }
 
     private void initializeRoomsAndEntities() {
+        // 1. Очищення всього старого
         coins.clear();
         healthPacks.clear();
         lootDrops.clear();
@@ -145,7 +151,7 @@ public class GameRenderer {
         bullets.clear();
         clearAllEffects();
 
-        // Gamble Knight: Встановлюємо початковий баланс залежно від рівня
+        // 2. Налаштування економіки рівня
         if (currentLevel == 1) {
             playerMoney = GameConfig.Level1.INITIAL_MONEY;
             initialMoney = GameConfig.Level1.INITIAL_MONEY;
@@ -155,43 +161,92 @@ public class GameRenderer {
         } else if (currentLevel == 3) {
             playerMoney = GameConfig.Level3.INITIAL_MONEY;
             initialMoney = GameConfig.Level3.INITIAL_MONEY;
+        } else {
+            playerMoney = GameConfig.Level3.INITIAL_MONEY + (currentLevel - 3) * 20;
+            initialMoney = playerMoney;
         }
 
-        // Scatter coins and health packs
-        coins.add(new Coin(300, 250));
+        // 3. Створення кімнат
 
-        // ==== ROOM 0: SAFE SPAWN ROOM (без ворогів) ====
+        // SPAWN ROOM (Безпечна зона)
         Room spawnRoom = new Room(-1, 100, 250, 200, 200, 0);
-        // NO ENEMIES
         rooms.add(spawnRoom);
 
-        // ==== ROOM 1: Main battle room ====
-        Room room1 = new Room(0, 50, 800, 400, 400, 1);
-        room1.addEnemy(new Enemy(150, 950, "melee"));
-        room1.addEnemy(new Enemy(250, 900, "melee"));
-        room1.addEnemy(new Enemy(200, 850, "ranged"));
+        // ROOM 1
+        Room room1 = new Room(0, 50, 800, 400, 400, 0);
+        int baseCount1 = 3 + Math.max(0, currentLevel - 1);
+        for (int i = 0; i < baseCount1; i++) {
+            spawnEnemySafely(room1, (i % 3 == 0) ? "ranged" : "melee");
+        }
         rooms.add(room1);
 
-        // ==== ROOM 2: Center room ====
-        Room room2 = new Room(1, 650, 50, 450, 450, 2);
-        room2.addEnemy(new Enemy(750, 250, "melee"));
-        room2.addEnemy(new Enemy(950, 150, "ranged"));
-        room2.addEnemy(new Enemy(800, 300, "melee"));
-        room2.addEnemy(new Enemy(850, 200, "ranged"));
+        // ROOM 2
+        Room room2 = new Room(1, 650, 50, 450, 450, 0);
+        int baseCount2 = 4 + Math.max(0, currentLevel - 1);
+        for (int i = 0; i < baseCount2; i++) {
+            spawnEnemySafely(room2, (i % 2 == 0) ? "melee" : "ranged");
+        }
         rooms.add(room2);
 
-        // ==== ROOM 3: Hard room ====
-        Room room3 = new Room(2, 1300, 800, 450, 400, 3);
-        room3.addEnemy(new Enemy(1400, 950, "melee"));
-        room3.addEnemy(new Enemy(1500, 1050, "ranged"));
-        room3.addEnemy(new Enemy(1550, 950, "melee"));
-        room3.addEnemy(new Enemy(1600, 1000, "ranged"));
-        room3.addEnemy(new Enemy(1650, 900, "melee"));
+        // ROOM 3: Фінальна кімната (з порталом)
+        Room room3 = new Room(2, 1300, 800, 450, 400, currentLevel);
+        int baseCount3 = 5 + Math.max(0, currentLevel - 1) * 2;
+        for (int i = 0; i < baseCount3; i++) {
+            spawnEnemySafely(room3, (i % 2 == 0) ? "melee" : "ranged");
+        }
         rooms.add(room3);
 
-        // Гравець стартує в БЕЗПЕЧНІЙ кімнаті
+        coins.add(new Coin(300, 250));
+
         playerX = 150f;
         playerY = 300f;
+    }
+
+    /**
+     * Допоміжний метод для пошуку безпечного місця появи ворога всередині кімнати.
+     * Перевіряє, щоб ворог не з'явився у стіні або за межами карти.
+     */
+    private void spawnEnemySafely(Room room, String type) {
+        float margin = 60f; // Відступ від стін для безпеки
+        float ex = 0, ey = 0;
+        boolean posValid = false;
+        int attempts = 0;
+
+        // Створюємо тимчасовий прямокутник для перевірки колізій (розмір ворога 32x32)
+        Rectangle tempBounds = new Rectangle(0, 0, 32, 32);
+
+        // Пробуємо знайти місце (максимум 15 спроб)
+        while (!posValid && attempts < 15) {
+            ex = room.bounds.x + margin + random.nextFloat() * (room.bounds.width - margin * 2);
+            ey = room.bounds.y + margin + random.nextFloat() * (room.bounds.height - margin * 2);
+
+            tempBounds.setPosition(ex, ey);
+
+            // Використовуємо метод перевірки колізій зі стінами та дверима
+            if (!isColliding(tempBounds)) {
+                posValid = true;
+            }
+            attempts++;
+        }
+
+        Enemy e = new Enemy(ex, ey, type);
+        applyDifficultyToEnemy(e);
+        room.addEnemy(e);
+    }
+
+    private void applyDifficultyToEnemy(Enemy enemy) {
+        if (enemy == null || gameSettings == null) return;
+        float hpMult = gameSettings.getHpMultiplier();
+        float speedMult = gameSettings.getSpeedMultiplier();
+
+        if (currentLevel >= 4) {
+            float extra = 1f + (currentLevel - 3) * 0.6f;
+            hpMult *= extra;
+            speedMult *= 1f + (currentLevel - 3) * 0.2f;
+        }
+
+        enemy.hp = enemy.hp * hpMult;
+        enemy.speed = enemy.speed * speedMult;
     }
 
     private void clearAllEffects() {
@@ -206,9 +261,9 @@ public class GameRenderer {
     }
 
     private void restartGame() {
-        playerX = 150f; // Безпечна кімната
+        playerX = 150f;
         playerY = 300f;
-        playerMoney = initialMoney; // Gamble Knight: Відновлюємо баланс
+        playerMoney = initialMoney;
         attackVisualTimer = 0f;
         isGameOverScreen = false;
         isInRoom = false;
@@ -224,6 +279,14 @@ public class GameRenderer {
     public void render() {
         float delta = Gdx.graphics.getDeltaTime();
 
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F9)) {
+            gameSettings.cycleDifficulty();
+            for (Enemy e : getAllEnemies()) {
+                e.hp = e.hp * gameSettings.getHpMultiplier();
+                e.speed = e.speed * gameSettings.getSpeedMultiplier();
+            }
+        }
+
         if (isGameOverScreen) {
             gameOverTimer += delta;
             if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
@@ -238,10 +301,9 @@ public class GameRenderer {
         if (attackVisualTimer > 0) attackVisualTimer -= delta;
         if (moneyShakeTimer > 0) moneyShakeTimer -= delta;
 
-        // Gamble Knight: Інфляція (Волл-Стріт рівень)
         if (currentLevel == 3) {
             inflationTimer += delta;
-            if (inflationTimer >= 2f) { // -1 монета кожні 2 секунди
+            if (inflationTimer >= 2f) {
                 playerMoney = Math.max(0, playerMoney - 1);
                 inflationTimer = 0f;
                 moneyShakeAmount = 3f;
@@ -249,17 +311,14 @@ public class GameRenderer {
             }
         }
 
-        // Gamble Knight: Перевіримо банкрутство
         if (playerMoney <= 0) {
             isGameOverScreen = true;
             gameOverTimer = 0f;
             return;
         }
 
-        // Update current room based on player position
         updateCurrentRoom();
 
-        // Handle weapon switching
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) currentWeapon = availableWeapons.get(0);
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) currentWeapon = availableWeapons.get(1);
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_3)) currentWeapon = availableWeapons.get(2);
@@ -282,9 +341,9 @@ public class GameRenderer {
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
             interactWithDoors();
+            tryEnterPortal();
         }
 
-        // Fire weapon with LEFT MOUSE or Ctrl
         currentWeapon.update(delta);
         if ((Gdx.input.isButtonPressed(Input.Buttons.LEFT) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) && currentWeapon.canShoot()) {
             fireWeapon(delta);
@@ -292,7 +351,6 @@ public class GameRenderer {
 
         Rectangle playerRect = new Rectangle(playerX, playerY, PLAYER_WIDTH, PLAYER_HEIGHT);
 
-        // Update bullets
         for (int i = bullets.size() - 1; i >= 0; i--) {
             Bullet bullet = bullets.get(i);
             bullet.update(delta);
@@ -302,7 +360,6 @@ public class GameRenderer {
                 continue;
             }
 
-            // Check collision with enemies in current room
             if (currentRoom != null) {
                 for (int j = currentRoom.enemies.size() - 1; j >= 0; j--) {
                     Enemy enemy = currentRoom.enemies.get(j);
@@ -313,13 +370,11 @@ public class GameRenderer {
 
                         if (enemy.hp <= 0) {
                             currentRoom.removeEnemy(enemy);
-                            // Gamble Knight: Гроші від ворогів
                             int moneyReward = GameConfig.MONEY_FROM_BASIC_ENEMY + (currentLevel * 25);
                             playerMoney += moneyReward;
                             moneyShakeAmount = GameConfig.MONEY_SHAKE_AMOUNT;
                             moneyShakeTimer = 0.15f;
 
-                            // Spawn loot drops
                             if (random.nextFloat() < 0.6f) {
                                 lootDrops.add(new LootDrop(enemy.x, enemy.y, "coin"));
                             }
@@ -335,7 +390,6 @@ public class GameRenderer {
             }
         }
 
-        // Collect coins
         for (Coin coin : coins) {
             if (!coin.isCollected && playerRect.overlaps(coin.getBounds())) {
                 coin.isCollected = true;
@@ -349,7 +403,6 @@ public class GameRenderer {
             }
         }
 
-        // Collect loot drops
         for (int i = lootDrops.size() - 1; i >= 0; i--) {
             LootDrop loot = lootDrops.get(i);
             if (!loot.collected && playerRect.overlaps(loot.getBounds())) {
@@ -363,7 +416,6 @@ public class GameRenderer {
             }
         }
 
-        // Update enemies in current room
         if (currentRoom != null) {
             for (int i = currentRoom.enemies.size() - 1; i >= 0; i--) {
                 Enemy enemy = currentRoom.enemies.get(i);
@@ -378,22 +430,19 @@ public class GameRenderer {
                 }
 
                 if (playerRect.overlaps(enemy.getBounds())) {
-                    // Gamble Knight: Враги витрачають гроші гравця
-                    float damage = 5f * delta; // Ворог витрачає 5 грошей/сек
+                    float damage = 5f * delta;
                     playerMoney = Math.max(0, (int)(playerMoney - damage));
                     moneyShakeAmount = 2f;
                     moneyShakeTimer = 0.05f;
                 }
             }
 
-            // Check if room is cleared
             if (roomLocked && currentRoom.allEnemiesDefeated()) {
                 roomLocked = false;
                 currentRoom.clear();
             }
         }
 
-        // Update effects
         for (int i = coinEffects.size() - 1; i >= 0; i--) {
             CoinEffectView e = coinEffects.get(i);
             e.update(delta);
@@ -423,7 +472,6 @@ public class GameRenderer {
     }
 
     private void updateCurrentRoom() {
-        // Check which room the player is in
         Room previousRoom = currentRoom;
         currentRoom = null;
 
@@ -434,7 +482,6 @@ public class GameRenderer {
             }
         }
 
-        // If entering a new room
         if (currentRoom != previousRoom && currentRoom != null && !currentRoom.isCleared) {
             if (!currentRoom.isEntered) {
                 currentRoom.enter();
@@ -442,26 +489,22 @@ public class GameRenderer {
             }
         }
 
-        // If left room, unlock
         if (currentRoom == null) {
             roomLocked = false;
         }
     }
 
     private void fireWeapon(float delta) {
-        // Gamble Knight: Перевіряємо чи є гроші на постріл
         if (playerMoney < currentWeapon.costPerShot) {
-            return; // Не вистачає грошей
+            return;
         }
 
         currentWeapon.shoot();
 
-        // Витрачаємо гроші за постріл
         playerMoney -= currentWeapon.costPerShot;
         moneyShakeAmount = GameConfig.MONEY_SHAKE_AMOUNT;
         moneyShakeTimer = 0.1f;
 
-        // Get nearest enemy in current room
         Enemy target = null;
         if (currentRoom != null && currentRoom.enemies.size() > 0) {
             float nearestDist = Float.MAX_VALUE;
@@ -476,8 +519,7 @@ public class GameRenderer {
             }
         }
 
-        // Calculate angle to target, or default to right if no target
-        float baseAngle = 0f; // Default: shoot right
+        float baseAngle = 0f;
         if (target != null) {
             float dx = target.x - (playerX + PLAYER_WIDTH / 2);
             float dy = target.y - (playerY + PLAYER_HEIGHT / 2);
@@ -485,7 +527,6 @@ public class GameRenderer {
             baseAngle = (float) Math.toDegrees(angleToTarget);
         }
 
-        // Fire bullets with spread
         for (int i = 0; i < currentWeapon.bulletsPerShot; i++) {
             float spread = (random.nextFloat() - 0.5f) * currentWeapon.spread;
             float finalAngle = baseAngle + spread;
@@ -509,52 +550,49 @@ public class GameRenderer {
         globalShapeRenderer.setProjectionMatrix(camera.combined);
         globalShapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        // Draw coins and loot drops
         for (Coin coin : coins) coin.render(globalShapeRenderer);
         for (HealthPack pack : healthPacks) pack.render(globalShapeRenderer);
         for (LootDrop loot : lootDrops) loot.render(globalShapeRenderer);
 
-        // Draw room lock indicator FIRST if room locked - Just a thin border
         if (currentRoom != null && roomLocked) {
             globalShapeRenderer.setColor(1f, 0f, 0f, 0.6f);
-            // Draw red border around room instead of full overlay
-            globalShapeRenderer.rect(currentRoom.bounds.x, currentRoom.bounds.y, 8, currentRoom.bounds.height); // Left
-            globalShapeRenderer.rect(currentRoom.bounds.x + currentRoom.bounds.width - 8, currentRoom.bounds.y, 8, currentRoom.bounds.height); // Right
-            globalShapeRenderer.rect(currentRoom.bounds.x, currentRoom.bounds.y, currentRoom.bounds.width, 8); // Top
-            globalShapeRenderer.rect(currentRoom.bounds.x, currentRoom.bounds.y + currentRoom.bounds.height - 8, currentRoom.bounds.width, 8); // Bottom
+            globalShapeRenderer.rect(currentRoom.bounds.x, currentRoom.bounds.y, 8, currentRoom.bounds.height);
+            globalShapeRenderer.rect(currentRoom.bounds.x + currentRoom.bounds.width - 8, currentRoom.bounds.y, 8, currentRoom.bounds.height);
+            globalShapeRenderer.rect(currentRoom.bounds.x, currentRoom.bounds.y, currentRoom.bounds.width, 8);
+            globalShapeRenderer.rect(currentRoom.bounds.x, currentRoom.bounds.y + currentRoom.bounds.height - 8, currentRoom.bounds.width, 8);
         }
 
-        // Render enemies in current room ON TOP
         if (currentRoom != null) {
+            // Використовуємо новий красивий рендеринг ворогів
             for (Enemy enemy : currentRoom.enemies) {
-                enemy.render(globalShapeRenderer);
+                enemyView.render(globalShapeRenderer, enemy.x, enemy.y, enemy.type, camTime);
             }
 
-            // Render portal when room is cleared
-            if (currentRoom.isCleared) {
-                drawPortal(currentRoom.portalBounds.x, currentRoom.portalBounds.y, camTime);
+            if (currentRoom.isCleared
+                && currentRoom.isPortalEnabledForCurrentLevel(currentLevel)) {
+
+                draw3DPortal(
+                    currentRoom.portalBounds.x,
+                    currentRoom.portalBounds.y,
+                    camTime
+                );
             }
         }
-
         if (attackVisualTimer > 0) {
             globalShapeRenderer.setColor(1, 1, 1, 0.35f);
             globalShapeRenderer.circle(playerX + PLAYER_WIDTH / 2f, playerY + PLAYER_HEIGHT / 2f, 55f);
         }
         globalShapeRenderer.end();
 
-        // Render bullets
         globalShapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         for (Bullet bullet : bullets) {
             bullet.render(globalShapeRenderer);
         }
         globalShapeRenderer.end();
 
-        // РЕНДЕРЕРИНГ ЕФЕКТІВ НА СЦЕНІ
         for (CoinEffectView e : coinEffects) e.render(batch);
         for (ExplosionEffect e : explosions) e.render(batch);
 
-        // Gamble Knight: Завжди показуємо гравця (доки він не банкруткував)
-        // Find nearest enemy for weapon animation
         float targetEnemyX = 0;
         float targetEnemyY = 0;
         if (currentRoom != null && currentRoom.enemies.size() > 0) {
@@ -574,12 +612,11 @@ public class GameRenderer {
         }
         playerView.render(batch, playerX, playerY, camTime * 40f, targetEnemyX, targetEnemyY);
 
-        // РЕНДЕРЕРИНГ ТЕКСТОВИХ ЕФЕКТІВ
         for (DamageTextView e : damageTexts) e.render(batch);
         for (HealTextView e : healTexts) e.render(batch);
     }
 
-    private void drawPortal(float x, float y, float time) {
+    public void draw3DPortal(float x, float y, float time) {
         globalShapeRenderer.setColor(0, 0, 0, 0.4f);
         globalShapeRenderer.ellipse(x - 20, y - 8, 90, 20);
         float pulse = (float) Math.sin(time * 5f) * 4f;
@@ -600,12 +637,10 @@ public class GameRenderer {
     private void drawUI() {
         batch.setProjectionMatrix(uiMatrix);
 
-        // Gamble Knight: Великий жирний лічильник грошей - ТІЛЬКИ ГРОШІ!
         batch.begin();
         gameOverFont.getData().setScale(3f);
-        gameOverFont.setColor(1f, 0.84f, 0f, 1f); // Золотий колір
+        gameOverFont.setColor(1f, 0.84f, 0f, 1f);
 
-        // Apply money shake effect
         float shakeX = 0, shakeY = 0;
         if (moneyShakeTimer > 0) {
             shakeX = (random.nextFloat() - 0.5f) * moneyShakeAmount;
@@ -616,16 +651,13 @@ public class GameRenderer {
         gameOverFont.getData().setScale(1.5f);
         gameOverFont.setColor(Color.WHITE);
 
-        // Show level info
-        String levelName = (currentLevel == 1 ? "Трущоби" : currentLevel == 2 ? "Казино" : "Волл-Стріт");
+        String levelName = getLevelName(currentLevel);
         gameOverFont.draw(batch, "Level " + currentLevel + ": " + levelName, 50, 630);
 
-        // Weapon info
         gameOverFont.getData().setScale(1.2f);
         gameOverFont.setColor(Color.CYAN);
         gameOverFont.draw(batch, "1-4: " + currentWeapon.name + " ($" + currentWeapon.costPerShot + "/shot)", 50, 580);
 
-        // DEBUG: Show room and enemy info
         gameOverFont.setColor(Color.YELLOW);
         if (currentRoom != null) {
             gameOverFont.draw(batch, "Enemies: " + currentRoom.enemies.size(), 50, 530);
@@ -633,26 +665,37 @@ public class GameRenderer {
             gameOverFont.draw(batch, "Not in room", 50, 530);
         }
 
-        // Room status
         if (currentRoom != null && roomLocked) {
             gameOverFont.setColor(Color.RED);
             gameOverFont.getData().setScale(2f);
             gameOverFont.draw(batch, "KILL ALL ENEMIES!", 300, 680);
         }
-        if (currentRoom != null && currentRoom.isCleared) {
+        if (currentRoom != null
+            && currentRoom.isCleared
+            && currentRoom.isPortalEnabledForCurrentLevel(currentLevel)) {
+
             gameOverFont.setColor(Color.GREEN);
             gameOverFont.getData().setScale(2f);
             gameOverFont.draw(batch, "EXIT PORTAL OPEN!", 300, 680);
         }
 
-        // Inflation warning on level 3
         if (currentLevel == 3) {
             gameOverFont.setColor(Color.RED);
             gameOverFont.getData().setScale(1.5f);
             gameOverFont.draw(batch, "INFLATION: -$1 every 2 sec", 50, 480);
         }
 
+        gameOverFont.setColor(Color.WHITE);
+        gameOverFont.getData().setScale(1.2f);
+        gameOverFont.draw(batch, "Difficulty: " + gameSettings.getDifficulty().name(), 50, 440);
+
         batch.end();
+
+        try {
+            minimapUI.render(batch, playerX, playerY, coins, getAllEnemies());
+        } catch (Throwable t) {
+            // safe-ignore
+        }
     }
 
     private List<Enemy> getAllEnemies() {
@@ -710,6 +753,27 @@ public class GameRenderer {
         }
     }
 
+    private void tryEnterPortal() {
+        if (currentRoom == null) return;
+        if (!currentRoom.isCleared) return;
+        if (!currentRoom.isPortalEnabledForCurrentLevel(currentLevel)) return;
+
+        Rectangle playerRect = new Rectangle(playerX, playerY, PLAYER_WIDTH, PLAYER_HEIGHT);
+        if (playerRect.overlaps(currentRoom.portalBounds)) {
+            goToNextLevel();
+        }
+    }
+
+    private void goToNextLevel() {
+        currentLevel++;
+        if (currentLevel > 7) currentLevel = 1;
+
+        playerX = 150f;
+        playerY = 300f;
+        bullets.clear();
+        initializeRoomsAndEntities();
+    }
+
     public void dispose() {
         batch.dispose();
         globalShapeRenderer.dispose();
@@ -724,5 +788,18 @@ public class GameRenderer {
 
         clearAllEffects();
         bullets.clear();
+    }
+
+    private String getLevelName(int level) {
+        switch (level) {
+            case 1: return "Трущоби";
+            case 2: return "Казино";
+            case 3: return "Волл-Стріт";
+            case 4: return "Бізнес-центр";
+            case 5: return "Фінансова глибина";
+            case 6: return "Крипто-лабіринт";
+            case 7: return "Космічна станція";
+            default: return "Невідомо";
+        }
     }
 }

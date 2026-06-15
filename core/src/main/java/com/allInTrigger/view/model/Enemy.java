@@ -55,24 +55,35 @@ public class Enemy {
     }
 
     public void render(ShapeRenderer shapeRenderer) {
-        //  тінь
-        shapeRenderer.setColor(0, 0, 0, 0.3f);
-        shapeRenderer.ellipse(x + 2, y - 4, 28, 10);
+        // shadow
+        shapeRenderer.setColor(0, 0, 0, 0.25f);
+        shapeRenderer.ellipse(x + width/2f, y - 6, width * 0.9f, 10);
 
+        // body base
         if (type.equals("melee")) {
-            // ближній ворог
-            shapeRenderer.setColor(Color.RED);
-            shapeRenderer.rect(x, y, width, height);
-            shapeRenderer.setColor(Color.YELLOW);
-            shapeRenderer.circle(x + 10, y + 22, 3);
-            shapeRenderer.circle(x + 22, y + 22, 3);
+            // beefy rounded melee enemy
+            shapeRenderer.setColor(0.8f, 0.15f, 0.15f, 1f);
+            shapeRenderer.ellipse(x + width/2f, y + height/2f, width * 0.9f, height * 0.9f);
+            // armor plate
+            shapeRenderer.setColor(0.5f, 0.1f, 0.1f, 1f);
+            shapeRenderer.rect(x + width*0.15f, y + height*0.55f, width*0.7f, height*0.25f);
+            // eyes
+            float eyeY = y + height*0.62f;
+            float eyeCX = x + width*0.5f;
+            float eyeOffset = width * 0.12f;
+            shapeRenderer.setColor(1f, 1f, 0.2f, 1f);
+            shapeRenderer.circle(eyeCX - eyeOffset, eyeY, 3.5f);
+            shapeRenderer.circle(eyeCX + eyeOffset, eyeY, 3.5f);
         } else {
-            // дальній
-            shapeRenderer.setColor(1f, 0.5f, 0f, 1f);
-            shapeRenderer.rect(x, y, width, height);
-            shapeRenderer.setColor(Color.WHITE);
-            shapeRenderer.circle(x + 10, y + 22, 2.5f);
-            shapeRenderer.circle(x + 22, y + 22, 2.5f);
+            // ranged — sleeker
+            shapeRenderer.setColor(1f, 0.55f, 0f, 1f);
+            shapeRenderer.ellipse(x + width/2f, y + height/2f, width * 0.8f, height * 0.6f);
+            // headlight
+            shapeRenderer.setColor(1f, 1f, 1f, 1f);
+            shapeRenderer.circle(x + width*0.5f, y + height*0.62f, 2.5f);
+            // backpack or weapon mount
+            shapeRenderer.setColor(0.85f, 0.45f, 0f, 1f);
+            shapeRenderer.rect(x + width*0.65f, y + height*0.35f, width*0.2f, height*0.35f);
         }
     }
 }

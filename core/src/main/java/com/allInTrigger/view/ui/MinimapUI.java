@@ -31,7 +31,7 @@ public class MinimapUI {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
         float mapX = 1080;
-        float mapY = 470;
+        float mapY = 545;
         float mapW = 170;
         float mapH = 150;
 
