@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.allInTrigger.AllInTrigger;
+import com.allInTrigger.view.ui.SoundManager; // ← ЗВУК
 
 public class LobbyScreen implements Screen {
     private final AllInTrigger game;
@@ -92,6 +93,9 @@ public class LobbyScreen implements Screen {
             new Vector2(900, 850),  new Vector2(1050, 450),
             new Vector2(180, 500),
         };
+
+        // ── Музика лобі (та ж, що меню) ───────────────────────────────────
+        SoundManager.getInstance().playMenuMusic();
     }
 
     @Override
@@ -180,9 +184,12 @@ public class LobbyScreen implements Screen {
     private void checkPortalCollision() {
         Rectangle p = new Rectangle(playerPos.x, playerPos.y, PLAYER_WIDTH, PLAYER_HEIGHT);
         if (p.overlaps(portalBounds)) {
+            SoundManager.getInstance().playClick(); // ← ЗВУК входу в портал
             game.setScreen(new GameScreen(game));
         }
     }
+
+    // ── малювання (без змін) ───────────────────────────────────────────────
 
     private void drawTorch(float x, float y, float time) {
         float flicker = (float) Math.sin(time * 6.5f + x * 0.01f) * 4f;
@@ -286,9 +293,9 @@ public class LobbyScreen implements Screen {
     }
 
     @Override public void resize(int width, int height) {}
-    @Override public void pause() {}
-    @Override public void resume() {}
-    @Override public void hide() {}
+    @Override public void pause()  { SoundManager.getInstance().pauseMusic(); }
+    @Override public void resume() { SoundManager.getInstance().resumeMusic(); }
+    @Override public void hide()   {}
 
     @Override
     public void dispose() {

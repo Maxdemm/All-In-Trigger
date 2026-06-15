@@ -24,6 +24,7 @@ import com.allInTrigger.view.effects.HealTextView;
 import com.allInTrigger.view.ui.HUD;
 import com.allInTrigger.view.ui.MinimapUI;
 import com.allInTrigger.view.ui.SlotMachineUI;
+import com.allInTrigger.view.ui.SoundManager; // ← ЗВУК
 import com.allInTrigger.view.ui.UpgradeUI;
 import com.allInTrigger.view.ui.WeaponPanel;
 import com.allInTrigger.view.model.*;
@@ -59,13 +60,11 @@ public class GameRenderer {
     private List<ExplosionEffect> explosions;
     private List<HealTextView> healTexts;
 
-    // Room system
     private List<Room> rooms;
     private Room currentRoom;
     private boolean isInRoom = false;
     private boolean roomLocked = false;
 
-    // Weapons and bullets
     private Weapon currentWeapon;
     private List<Weapon> availableWeapons;
     private List<Bullet> bullets;
@@ -77,14 +76,12 @@ public class GameRenderer {
     private final float PLAYER_HEIGHT = 36f;
     private final float PLAYER_SPEED = 300f;
 
-    // Gamble Knight: Гроші = Здоров'я
     private int playerMoney = 100;
     private int initialMoney = 100;
     private final int MAX_MONEY = 1000;
     private float moneyShakeAmount = 0f;
     private float moneyShakeTimer = 0f;
 
-    // Система рівнів
     private int currentLevel = 1;
     private float inflationTimer = 0f;
     private boolean levelCleared = false;
@@ -131,8 +128,6 @@ public class GameRenderer {
         availableWeapons = new ArrayList<>();
         random = new Random();
 
-        gameSettings = new GameSettings();
-
         availableWeapons.add(Weapon.createPistol());
         availableWeapons.add(Weapon.createShotgun());
         availableWeapons.add(Weapon.createRifle());
@@ -151,7 +146,6 @@ public class GameRenderer {
         bullets.clear();
         clearAllEffects();
 
-        // 2. Налаштування економіки рівня
         if (currentLevel == 1) {
             playerMoney = GameConfig.Level1.INITIAL_MONEY;
             initialMoney = GameConfig.Level1.INITIAL_MONEY;
@@ -166,37 +160,31 @@ public class GameRenderer {
             initialMoney = playerMoney;
         }
 
-        // 3. Створення кімнат
+        coins.add(new Coin(300, 250));
 
-        // SPAWN ROOM (Безпечна зона)
         Room spawnRoom = new Room(-1, 100, 250, 200, 200, 0);
         rooms.add(spawnRoom);
 
-        // ROOM 1
-        Room room1 = new Room(0, 50, 800, 400, 400, 0);
-        int baseCount1 = 3 + Math.max(0, currentLevel - 1);
-        for (int i = 0; i < baseCount1; i++) {
-            spawnEnemySafely(room1, (i % 3 == 0) ? "ranged" : "melee");
-        }
+        Room room1 = new Room(0, 50, 800, 400, 400, 1);
+        room1.addEnemy(new Enemy(150, 950, "melee"));
+        room1.addEnemy(new Enemy(250, 900, "melee"));
+        room1.addEnemy(new Enemy(200, 850, "ranged"));
         rooms.add(room1);
 
-        // ROOM 2
-        Room room2 = new Room(1, 650, 50, 450, 450, 0);
-        int baseCount2 = 4 + Math.max(0, currentLevel - 1);
-        for (int i = 0; i < baseCount2; i++) {
-            spawnEnemySafely(room2, (i % 2 == 0) ? "melee" : "ranged");
-        }
+        Room room2 = new Room(1, 650, 50, 450, 450, 2);
+        room2.addEnemy(new Enemy(750, 250, "melee"));
+        room2.addEnemy(new Enemy(950, 150, "ranged"));
+        room2.addEnemy(new Enemy(800, 300, "melee"));
+        room2.addEnemy(new Enemy(850, 200, "ranged"));
         rooms.add(room2);
 
-        // ROOM 3: Фінальна кімната (з порталом)
-        Room room3 = new Room(2, 1300, 800, 450, 400, currentLevel);
-        int baseCount3 = 5 + Math.max(0, currentLevel - 1) * 2;
-        for (int i = 0; i < baseCount3; i++) {
-            spawnEnemySafely(room3, (i % 2 == 0) ? "melee" : "ranged");
-        }
+        Room room3 = new Room(2, 1300, 800, 450, 400, 3);
+        room3.addEnemy(new Enemy(1400, 950, "melee"));
+        room3.addEnemy(new Enemy(1500, 1050, "ranged"));
+        room3.addEnemy(new Enemy(1550, 950, "melee"));
+        room3.addEnemy(new Enemy(1600, 1000, "ranged"));
+        room3.addEnemy(new Enemy(1650, 900, "melee"));
         rooms.add(room3);
-
-        coins.add(new Coin(300, 250));
 
         playerX = 150f;
         playerY = 300f;
@@ -274,6 +262,8 @@ public class GameRenderer {
         levelCleared = false;
         bullets.clear();
         initializeRoomsAndEntities();
+        // ── Відновлюємо музику рівня після рестарту ───────────────────────
+        SoundManager.getInstance().playLevelMusic();
     }
 
     public void render() {
@@ -374,6 +364,7 @@ public class GameRenderer {
                             playerMoney += moneyReward;
                             moneyShakeAmount = GameConfig.MONEY_SHAKE_AMOUNT;
                             moneyShakeTimer = 0.15f;
+                            SoundManager.getInstance().playCoin(); // ← ЗВУК нагороди
 
                             if (random.nextFloat() < 0.6f) {
                                 lootDrops.add(new LootDrop(enemy.x, enemy.y, "coin"));
@@ -396,6 +387,7 @@ public class GameRenderer {
                 playerMoney += 20;
                 moneyShakeAmount = 2f;
                 moneyShakeTimer = 0.1f;
+                SoundManager.getInstance().playCoin(); // ← ЗВУК монети
 
                 for (int j = 0; j < 6; j++) {
                     coinEffects.add(new CoinEffectView(coin.x, coin.y));
@@ -411,11 +403,13 @@ public class GameRenderer {
                     playerMoney += 15;
                     moneyShakeAmount = 1.5f;
                     moneyShakeTimer = 0.1f;
+                    SoundManager.getInstance().playCoin(); // ← ЗВУК лут-монети
                 }
                 lootDrops.remove(i);
             }
         }
 
+        // Update enemies
         if (currentRoom != null) {
             for (int i = currentRoom.enemies.size() - 1; i >= 0; i--) {
                 Enemy enemy = currentRoom.enemies.get(i);
@@ -500,6 +494,7 @@ public class GameRenderer {
         }
 
         currentWeapon.shoot();
+        SoundManager.getInstance().playShoot(); // ← ЗВУК пострілу
 
         playerMoney -= currentWeapon.costPerShot;
         moneyShakeAmount = GameConfig.MONEY_SHAKE_AMOUNT;
@@ -568,14 +563,8 @@ public class GameRenderer {
                 enemyView.render(globalShapeRenderer, enemy.x, enemy.y, enemy.type, camTime);
             }
 
-            if (currentRoom.isCleared
-                && currentRoom.isPortalEnabledForCurrentLevel(currentLevel)) {
-
-                draw3DPortal(
-                    currentRoom.portalBounds.x,
-                    currentRoom.portalBounds.y,
-                    camTime
-                );
+            if (currentRoom.isCleared) {
+                drawPortal(currentRoom.portalBounds.x, currentRoom.portalBounds.y, camTime);
             }
         }
         if (attackVisualTimer > 0) {
@@ -651,7 +640,7 @@ public class GameRenderer {
         gameOverFont.getData().setScale(1.5f);
         gameOverFont.setColor(Color.WHITE);
 
-        String levelName = getLevelName(currentLevel);
+        String levelName = (currentLevel == 1 ? "Трущоби" : currentLevel == 2 ? "Казино" : "Волл-Стріт");
         gameOverFont.draw(batch, "Level " + currentLevel + ": " + levelName, 50, 630);
 
         gameOverFont.getData().setScale(1.2f);
@@ -788,6 +777,8 @@ public class GameRenderer {
 
         clearAllEffects();
         bullets.clear();
+
+        SoundManager.getInstance().dispose(); // ← ЗВУК: очищаємо ресурси
     }
 
     private String getLevelName(int level) {
