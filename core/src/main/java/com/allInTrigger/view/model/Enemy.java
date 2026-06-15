@@ -28,10 +28,29 @@ public class Enemy {
         Vector2 direction = new Vector2(playerX - this.x, playerY - this.y);
         float distance = direction.len();
 
+        // Enemies will follow player only when relatively close
         if (distance < 450f && distance > 5f) {
             direction.nor();
             this.x += direction.x * speed * delta;
             this.y += direction.y * speed * delta;
+        }
+    }
+
+    public void updateInRoom(float delta, float playerX, float playerY, Rectangle roomBounds) {
+        Vector2 direction = new Vector2(playerX - this.x, playerY - this.y);
+        float distance = direction.len();
+
+        // Only chase if player is in room and reasonably close
+        if (distance < 450f && distance > 5f) {
+            direction.nor();
+            float newX = this.x + direction.x * speed * delta;
+            float newY = this.y + direction.y * speed * delta;
+
+            // Keep enemy within room bounds
+            if (roomBounds.contains(newX + width / 2, newY + height / 2)) {
+                this.x = newX;
+                this.y = newY;
+            }
         }
     }
 
