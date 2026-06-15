@@ -1,0 +1,10 @@
+{
+  "id": 1,
+  "rooms": [
+    { "id": -1, "portal": false },
+    { "id": 0, "portal": true },
+    { "id": 1, "portal": true },
+    { "id": 2, "portal": false }
+  ]
+}
+

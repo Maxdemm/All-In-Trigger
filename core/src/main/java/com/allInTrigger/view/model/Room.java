@@ -3,6 +3,8 @@ package com.allInTrigger.view.model;
 import com.badlogic.gdx.math.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
+import com.allInTrigger.map.MapRegistry;
+import com.allInTrigger.map.LevelMap;
 
 public class Room {
     public int id;
@@ -46,9 +48,26 @@ public class Room {
         isEntered = false;
     }
 
+    /**
+     * Checks whether this room should show a portal when cleared. Default true if no level map registered.
+     */
+    public boolean isPortalEnabledForCurrentLevel(int levelId) {
+        try {
+            LevelMap map = MapRegistry.get(levelId).orElse(null);
+            if (map == null) return true; // no map -> keep old behaviour
+            // If the level explicitly enables portals for any room, respect the per-room flag.
+            if (map.hasAnyPortalEnabled()) {
+                return map.isPortalEnabledForRoom(this.id);
+            }
+            // If no portals are explicitly enabled for the level, default to true (old behaviour)
+            return true;
+        } catch (Throwable t) {
+            return true; // fail-safe: show portal if anything goes wrong
+        }
+    }
+
     public boolean playerIsInRoom(float playerX, float playerY, float playerWidth, float playerHeight) {
         Rectangle playerBounds = new Rectangle(playerX, playerY, playerWidth, playerHeight);
         return bounds.overlaps(playerBounds);
     }
 }
-

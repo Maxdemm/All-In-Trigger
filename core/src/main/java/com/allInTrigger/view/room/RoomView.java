@@ -192,12 +192,12 @@ public class RoomView {
             drawYellowBarrier(1550, y);
         }
 
-        draw3DPortal(870, 980, time);
+//        draw3DPortal(870, 980, time);
         draw3DTorch(680, 1120, time, 1.2f);
         draw3DTorch(1050, 1120, time, 3.4f);
         drawVolumetricCrate(720, 1100);
 
-        draw3DPortal(200, 950, time);
+//        draw3DPortal(200, 950, time);
         draw3DTorch(100, 1100, time, 0.5f);
         draw3DTorch(380, 1100, time, 2.5f);
         drawVolumetricCrate(120, 850);
@@ -275,7 +275,7 @@ public class RoomView {
         draw3DBush(940, 290);
         draw3DPineTree(320, 280);
         draw3DTorch(950, 270, time, 0.5f);
-        draw3DPortal(1500, 240, time);
+//        draw3DPortal(1500, 240, time);
         draw3DPineTree(820, 220);
         draw3DTorch(220, 210, time, 0.0f);
         drawVolumetricCrate(1350, 200);
@@ -361,7 +361,7 @@ public class RoomView {
         shapeRenderer.rect(x + 20, y, 3, 20);
     }
 
-    private void draw3DPortal(float x, float y, float time) {
+    public void draw3DPortal(float x, float y, float time) {
         shapeRenderer.setColor(0, 0, 0, 0.4f);
         shapeRenderer.ellipse(x - 20, y - 8, 90, 20);
         float pulse = (float) Math.sin(time * 5f) * 4f;
